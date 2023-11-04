@@ -12,9 +12,26 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.release>11</maven.compiler.release>
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>com.github.victools</groupId>
+      <artifactId>jsonschema-generator</artifactId>
+      <version>4.32.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-yaml</artifactId>
+      <version>2.15.3</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.classgraph</groupId>
+      <artifactId>classgraph</artifactId>
+      <version>4.8.164</version>
+    </dependency>
+
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -22,4 +39,36 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.github.victools</groupId>
+        <artifactId>jsonschema-maven-plugin</artifactId>
+        <version>4.32.0</version>
+        <executions>
+          <execution>
+            <phase>test-compile</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <schemaVersion>DRAFT_2020_12</schemaVersion>
+          <packageNames>org.example.model</packageNames>
+          <schemaFilePath>src/test/resources/schemas</schemaFilePath>
+          <schemaFileName>{0}-schema.yml</schemaFileName>
+          <modules>
+            <module>
+              <className>utils.RefInsertModule</className>
+            </module>
+            <module>
+              <className>utils.GeneralConfigModule</className>
+            </module>
+          </modules>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
