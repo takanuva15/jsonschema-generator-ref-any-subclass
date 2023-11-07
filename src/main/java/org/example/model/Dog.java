@@ -1,5 +1,12 @@
 package org.example.model;
 
-public class Dog extends Animal{
+import lombok.Data;
+
+@Data
+public class Dog extends Animal {
 	private int barkVolume;
+
+	public String getBreed() {
+		return "labrador";
+	}
 }

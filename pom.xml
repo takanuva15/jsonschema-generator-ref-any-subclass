@@ -32,6 +32,11 @@
       <artifactId>classgraph</artifactId>
       <version>4.8.164</version>
     </dependency>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.28</version>
+    </dependency>
 
     <dependency>
       <groupId>junit</groupId>
@@ -60,6 +65,12 @@
           <packageNames>org.example.model</packageNames>
           <schemaFilePath>src/test/resources/schemas</schemaFilePath>
           <schemaFileName>{0}-schema.yml</schemaFileName>
+          <options>
+            <enabled>
+              <option>NONSTATIC_NONVOID_NONGETTER_METHODS</option>
+              <option>FIELDS_DERIVED_FROM_ARGUMENTFREE_METHODS</option>
+            </enabled>
+          </options>
           <modules>
             <module>
               <className>utils.RefInsertModule</className>

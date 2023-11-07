@@ -18,6 +18,9 @@ public class GeneralConfigModule implements Module {
 				.withSubtypeResolver(new ClassGraphSubtypeResolver())
 				.withCustomDefinitionProvider(descriptionProvider)
 				.withTypeAttributeOverride(descriptionProvider);
+		builder.forMethods()
+				.withIgnoreCheck(method -> method.getSchemaPropertyName().endsWith(")"));
+
 	}
 
 	private class InsertSchemaPropsProvider implements CustomDefinitionProviderV2, TypeAttributeOverrideV2 {
