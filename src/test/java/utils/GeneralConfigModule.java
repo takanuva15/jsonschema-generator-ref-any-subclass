@@ -4,9 +4,13 @@ import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.victools.jsonschema.generator.*;
 import com.github.victools.jsonschema.generator.Module;
+import com.github.victools.jsonschema.generator.impl.module.SimpleTypeModule;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfoList;
 import io.github.classgraph.ScanResult;
+import org.bson.types.ObjectId;
+
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,6 +24,11 @@ public class GeneralConfigModule implements Module {
 				.withTypeAttributeOverride(descriptionProvider);
 		builder.forMethods()
 				.withIgnoreCheck(method -> method.getSchemaPropertyName().endsWith(")"));
+		builder
+//				.with(new SimpleTypeModule().withStringType(ObjectId.class))
+				.forTypesInGeneral()
+				.withCustomDefinitionProvider(new ObjectIdToCustomSchemaProvider())
+		;
 
 	}
 
@@ -98,6 +107,21 @@ public class GeneralConfigModule implements Module {
 						.collect(Collectors.toList());
 			}
 			return null;
+		}
+	}
+
+	private class ObjectIdToCustomSchemaProvider implements CustomDefinitionProviderV2 {
+		@Override
+		public CustomDefinition provideCustomSchemaDefinition(ResolvedType javaType, SchemaGenerationContext context) {
+			if (!javaType.isInstanceOf(ObjectId.class)) {
+				return null;
+			}
+			var config = context.getGeneratorConfig();
+//			var schema = config.createObjectNode().put(context.getKeyword(SchemaKeyword.TAG_TYPE), context.getKeyword(SchemaKeyword.TAG_TYPE_STRING));
+			var schema = config.createObjectNode().put(context.getKeyword(SchemaKeyword.TAG_ANYOF),
+					config.createArrayNode()
+			);
+			return new CustomDefinition(schema, true);
 		}
 	}
 }
