@@ -104,9 +104,6 @@ public class GeneralConfigModule implements Module {
 		}
 	}
 
-	/**
-	 * Alternative to TargetTypeOverridesResolver for the ObjectId.
-	 */
 	private class ObjectIdToCustomSchemaProvider implements CustomDefinitionProviderV2 {
 		@Override
 		public CustomDefinition provideCustomSchemaDefinition(ResolvedType javaType, SchemaGenerationContext context) {
