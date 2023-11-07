@@ -49,11 +49,6 @@
       <version>1.18.28</version>
     </dependency>
     <dependency>
-      <groupId>jakarta.validation</groupId>
-      <artifactId>jakarta.validation-api</artifactId>
-      <version>3.0.2</version>
-    </dependency>
-    <dependency>
       <groupId>org.mongodb</groupId>
       <artifactId>bson</artifactId>
       <version>4.11.0</version>
@@ -98,12 +93,6 @@
             </module>
             <module>
               <className>utils.GeneralConfigModule</className>
-            </module>
-            <module>
-              <name>JakartaValidation</name>
-              <options>
-                <option>NOT_NULLABLE_FIELD_IS_REQUIRED</option>
-              </options>
             </module>
           </modules>
         </configuration>

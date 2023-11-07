@@ -7,7 +7,6 @@ import com.github.victools.jsonschema.generator.Module;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfoList;
 import io.github.classgraph.ScanResult;
-import jakarta.validation.constraints.NotNull;
 import org.bson.types.ObjectId;
 
 import java.util.List;
@@ -22,27 +21,9 @@ public class GeneralConfigModule implements Module {
 				.withSubtypeResolver(new ClassGraphSubtypeResolver())
 				.withCustomDefinitionProvider(descriptionProvider)
 				.withTypeAttributeOverride(descriptionProvider)
-				//.withCustomDefinitionProvider(new ObjectIdToCustomSchemaProvider())
-		;
-		builder.forFields()
-				.withTargetTypeOverridesResolver(this::collectTargetTypeOverrides);
+				.withCustomDefinitionProvider(new ObjectIdToCustomSchemaProvider());
 		builder.forMethods()
-				.withTargetTypeOverridesResolver(this::collectTargetTypeOverrides)
 				.withIgnoreCheck(method -> method.getSchemaPropertyName().endsWith(")"));
-	}
-
-	private List<ResolvedType> collectTargetTypeOverrides(MemberScope<?, ?> member) {
-		if (member.getType() == null || !member.getType().isInstanceOf(ObjectId.class)) {
-			return null;
-		}
-		return Stream.of(String.class, ObjectIdRepresentation.class)
-				.map(member.getContext()::resolve)
-				.collect(Collectors.toList());
-	}
-
-	private static class ObjectIdRepresentation {
-		@NotNull protected int date;
-		@NotNull protected int timestamp;
 	}
 
 	private class InsertSchemaPropsProvider implements CustomDefinitionProviderV2, TypeAttributeOverrideV2 {
@@ -132,21 +113,11 @@ public class GeneralConfigModule implements Module {
 			if (!javaType.isInstanceOf(ObjectId.class)) {
 				return null;
 			}
-			var config = context.getGeneratorConfig();
-			var schema = config.createObjectNode();
-			var anyOf = schema.putArray(context.getKeyword(SchemaKeyword.TAG_ANYOF));
-			anyOf.addObject()
-					.put(context.getKeyword(SchemaKeyword.TAG_TYPE), context.getKeyword(SchemaKeyword.TAG_TYPE_STRING));
-			ObjectNode secondTypeNode = anyOf.addObject();
-			ObjectNode objectProperties = secondTypeNode
-					.put(context.getKeyword(SchemaKeyword.TAG_TYPE), context.getKeyword(SchemaKeyword.TAG_TYPE_OBJECT))
-					.putObject(context.getKeyword(SchemaKeyword.TAG_PROPERTIES));
-			objectProperties.put("timestamp",
-					context.createStandardDefinitionReference(context.getTypeContext().resolve(Integer.class), this));
-			objectProperties.put("date",
-					context.createStandardDefinitionReference(context.getTypeContext().resolve(Integer.class), this));
-			secondTypeNode.putArray(context.getKeyword(SchemaKeyword.TAG_REQUIRED))
-					.add("timestamp").add("date");
+			var schema = context.getGeneratorConfig().createObjectNode();
+			Stream.of(String.class, ObjectId.class)
+					.map(context.getTypeContext()::resolve)
+					.map(anyOfOption -> context.createStandardDefinition(anyOfOption, this))
+					.forEach(schema.putArray(context.getKeyword(SchemaKeyword.TAG_ANYOF))::add);
 			return new CustomDefinition(schema, true);
 		}
 	}
