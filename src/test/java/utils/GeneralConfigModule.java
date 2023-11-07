@@ -4,15 +4,15 @@ import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.victools.jsonschema.generator.*;
 import com.github.victools.jsonschema.generator.Module;
-import com.github.victools.jsonschema.generator.impl.module.SimpleTypeModule;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfoList;
 import io.github.classgraph.ScanResult;
+import jakarta.validation.constraints.NotNull;
 import org.bson.types.ObjectId;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class GeneralConfigModule implements Module {
 	@Override
@@ -21,15 +21,28 @@ public class GeneralConfigModule implements Module {
 		builder.forTypesInGeneral()
 				.withSubtypeResolver(new ClassGraphSubtypeResolver())
 				.withCustomDefinitionProvider(descriptionProvider)
-				.withTypeAttributeOverride(descriptionProvider);
-		builder.forMethods()
-				.withIgnoreCheck(method -> method.getSchemaPropertyName().endsWith(")"));
-		builder
-//				.with(new SimpleTypeModule().withStringType(ObjectId.class))
-				.forTypesInGeneral()
-				.withCustomDefinitionProvider(new ObjectIdToCustomSchemaProvider())
+				.withTypeAttributeOverride(descriptionProvider)
+				//.withCustomDefinitionProvider(new ObjectIdToCustomSchemaProvider())
 		;
+		builder.forFields()
+				.withTargetTypeOverridesResolver(this::collectTargetTypeOverrides);
+		builder.forMethods()
+				.withTargetTypeOverridesResolver(this::collectTargetTypeOverrides)
+				.withIgnoreCheck(method -> method.getSchemaPropertyName().endsWith(")"));
+	}
 
+	private List<ResolvedType> collectTargetTypeOverrides(MemberScope<?, ?> member) {
+		if (member.getType() == null || !member.getType().isInstanceOf(ObjectId.class)) {
+			return null;
+		}
+		return Stream.of(String.class, ObjectIdRepresentation.class)
+				.map(member.getContext()::resolve)
+				.collect(Collectors.toList());
+	}
+
+	private static class ObjectIdRepresentation {
+		@NotNull protected int date;
+		@NotNull protected int timestamp;
 	}
 
 	private class InsertSchemaPropsProvider implements CustomDefinitionProviderV2, TypeAttributeOverrideV2 {
@@ -110,6 +123,9 @@ public class GeneralConfigModule implements Module {
 		}
 	}
 
+	/**
+	 * Alternative to TargetTypeOverridesResolver for the ObjectId.
+	 */
 	private class ObjectIdToCustomSchemaProvider implements CustomDefinitionProviderV2 {
 		@Override
 		public CustomDefinition provideCustomSchemaDefinition(ResolvedType javaType, SchemaGenerationContext context) {
@@ -117,10 +133,20 @@ public class GeneralConfigModule implements Module {
 				return null;
 			}
 			var config = context.getGeneratorConfig();
-//			var schema = config.createObjectNode().put(context.getKeyword(SchemaKeyword.TAG_TYPE), context.getKeyword(SchemaKeyword.TAG_TYPE_STRING));
-			var schema = config.createObjectNode().put(context.getKeyword(SchemaKeyword.TAG_ANYOF),
-					config.createArrayNode()
-			);
+			var schema = config.createObjectNode();
+			var anyOf = schema.putArray(context.getKeyword(SchemaKeyword.TAG_ANYOF));
+			anyOf.addObject()
+					.put(context.getKeyword(SchemaKeyword.TAG_TYPE), context.getKeyword(SchemaKeyword.TAG_TYPE_STRING));
+			ObjectNode secondTypeNode = anyOf.addObject();
+			ObjectNode objectProperties = secondTypeNode
+					.put(context.getKeyword(SchemaKeyword.TAG_TYPE), context.getKeyword(SchemaKeyword.TAG_TYPE_OBJECT))
+					.putObject(context.getKeyword(SchemaKeyword.TAG_PROPERTIES));
+			objectProperties.put("timestamp",
+					context.createStandardDefinitionReference(context.getTypeContext().resolve(Integer.class), this));
+			objectProperties.put("date",
+					context.createStandardDefinitionReference(context.getTypeContext().resolve(Integer.class), this));
+			secondTypeNode.putArray(context.getKeyword(SchemaKeyword.TAG_REQUIRED))
+					.add("timestamp").add("date");
 			return new CustomDefinition(schema, true);
 		}
 	}

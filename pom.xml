@@ -14,13 +14,24 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
+    <victools.version>4.32.0</victools.version>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>com.github.victools</groupId>
       <artifactId>jsonschema-generator</artifactId>
-      <version>4.32.0</version>
+      <version>${victools.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-databind</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
@@ -36,6 +47,11 @@
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <version>1.18.28</version>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+      <version>3.0.2</version>
     </dependency>
     <dependency>
       <groupId>org.mongodb</groupId>
@@ -56,7 +72,7 @@
       <plugin>
         <groupId>com.github.victools</groupId>
         <artifactId>jsonschema-maven-plugin</artifactId>
-        <version>4.32.0</version>
+        <version>${victools.version}</version>
         <executions>
           <execution>
             <phase>test-compile</phase>
@@ -82,6 +98,12 @@
             </module>
             <module>
               <className>utils.GeneralConfigModule</className>
+            </module>
+            <module>
+              <name>JakartaValidation</name>
+              <options>
+                <option>NOT_NULLABLE_FIELD_IS_REQUIRED</option>
+              </options>
             </module>
           </modules>
         </configuration>
