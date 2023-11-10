@@ -89,6 +89,9 @@
           </options>
           <modules>
             <module>
+              <name>Jackson</name>
+            </module>
+            <module>
               <className>utils.RefInsertModule</className>
             </module>
             <module>
