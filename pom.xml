@@ -14,13 +14,24 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
+    <victools.version>4.32.0</victools.version>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>com.github.victools</groupId>
       <artifactId>jsonschema-generator</artifactId>
-      <version>4.32.0</version>
+      <version>${victools.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-databind</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
@@ -56,7 +67,7 @@
       <plugin>
         <groupId>com.github.victools</groupId>
         <artifactId>jsonschema-maven-plugin</artifactId>
-        <version>4.32.0</version>
+        <version>${victools.version}</version>
         <executions>
           <execution>
             <phase>test-compile</phase>
